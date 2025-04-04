@@ -1,6 +1,10 @@
 package config
 
-import "os"
+import (
+	"github.com/joho/godotenv"
+	"log"
+	"os"
+)
 
 type PostgresConfig struct {
 	Host     string
@@ -10,19 +14,16 @@ type PostgresConfig struct {
 	DBName   string
 }
 
-func LoadPostgresConfig() PostgresConfig {
-	return PostgresConfig{
-		Host:     getEnv("PG_HOST", "localhost"),
-		Port:     getEnv("PG_PORT", "5432"),
-		User:     getEnv("PG_USER", "postgres"),
-		Password: getEnv("PG_PASSWORD", "postgres"),
-		DBName:   getEnv("PG_DBNAME", "chatdb"),
+func LoadPostgresConfig() *PostgresConfig {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
-}
-
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
+	return &PostgresConfig{
+		Host:     os.Getenv("PG_HOST"),
+		Port:     os.Getenv("PG_PORT"),
+		User:     os.Getenv("PG_USER"),
+		Password: os.Getenv("PG_PASSWORD"),
+		DBName:   os.Getenv("PG_DBNAME"),
 	}
-	return defaultValue
 }

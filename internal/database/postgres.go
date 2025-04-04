@@ -17,7 +17,7 @@ type PostgresConfig struct {
 	DBName   string
 }
 
-func NewPostgresConnection(cfg PostgresConfig) (*pgxpool.Pool, error) {
+func NewPostgresConnection(cfg *PostgresConfig) (*pgxpool.Pool, error) {
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.User,
 		cfg.Password,

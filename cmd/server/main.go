@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/assu-2000/StreamRPC/config"
 	"log"
 	"net"
 	"os"
@@ -49,15 +50,9 @@ func (s *chatServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Login
 }
 
 func main() {
-	pgConfig := database.PostgresConfig{
-		Host:     "localhost",
-		Port:     "5432",
-		User:     "postgres",
-		Password: "postgres",
-		DBName:   "chatdb",
-	}
+	pgConfig := config.LoadPostgresConfig()
 
-	pgPool, err := database.NewPostgresConnection(pgConfig)
+	pgPool, err := database.NewPostgresConnection((*database.PostgresConfig)(pgConfig))
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
 	}
