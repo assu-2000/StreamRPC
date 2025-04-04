@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -33,6 +34,7 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *User) error {
 		if isDuplicateKeyError(err) {
 			return errors.New("username or email already exists")
 		}
+		fmt.Println(err)
 		return err
 	}
 

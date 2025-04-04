@@ -18,6 +18,7 @@ type PostgresConfig struct {
 }
 
 func NewPostgresConnection(cfg *PostgresConfig) (*pgxpool.Pool, error) {
+	fmt.Println("Connecting to PostgreSQL")
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.User,
 		cfg.Password,
@@ -43,6 +44,18 @@ func NewPostgresConnection(cfg *PostgresConfig) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
+	checkCurrentDatabase(pool)
+
 	log.Println("Successfully connected to PostgreSQL")
 	return pool, nil
+}
+
+func checkCurrentDatabase(pool *pgxpool.Pool) {
+	var dbName string
+	err := pool.QueryRow(context.Background(), "SELECT current_database()").Scan(&dbName)
+	if err != nil {
+		log.Printf("Error querying current database: %v", err)
+		return
+	}
+	log.Printf("Connected to database: %s", dbName)
 }
