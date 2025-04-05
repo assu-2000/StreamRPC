@@ -39,7 +39,7 @@ func main() {
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(authService.UnaryInterceptor()),
 	)
-	pb.RegisterChatServiceServer(s, &server.ChatServer{
+	pb.RegisterAuthGrpcServiceServer(s, &server.AuthHandler{
 		AuthService: authService,
 	})
 

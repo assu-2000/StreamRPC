@@ -1,0 +1,140 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+
+package chat;
+
+option go_package = "github.com/assu-2000/StreamRPC/internal/pb";
+
+service AuthGrpcService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc CheckAuth(google.protobuf.Empty) returns (AuthResponse);
+}
+
+service RoomGrpcService {
+  rpc CreateRoom(CreateRoomRequest) returns (Room);
+  rpc ListRooms(google.protobuf.Empty) returns (RoomList);
+  rpc JoinRoom(JoinRoomRequest) returns (stream RoomEvent);
+  rpc LeaveRoom(RoomID) returns (google.protobuf.Empty);
+}
+
+service MessageGrpcService {
+  rpc SendMessage(SendMessageRequest) returns (MessageAck);
+  rpc StreamMessages(RoomID) returns (stream ChatMessage);
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+  string refresh_token = 2;
+  string user_id = 3;
+}
+
+message ClientMessage {
+  string content = 1;
+}
+
+message ServerMessage {
+  string content = 1;
+  string sender = 2;
+}
+
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  string email = 3;
+}
+
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+}
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message AuthResponse {
+  string message =1;
+}
+
+message CreateRoomRequest {
+  string name = 1;
+  bool is_private = 2;
+}
+
+message JoinRoomRequest {
+  string room_id = 1;
+}
+
+message Room {
+  string id = 1;
+  string name = 2;
+  uint32 member_count = 3;
+  bool is_private = 4;
+}
+
+message RoomList {
+  repeated Room rooms = 1;
+}
+
+message RoomID {
+  string id = 1;
+}
+
+message RoomEvent {
+  oneof event {
+    UserJoined user_joined = 1;
+    UserLeft user_left = 2;
+    RoomDeleted room_deleted = 3;
+  }
+}
+
+message UserJoined {
+  string user_id = 1;
+  string username = 2;
+}
+
+message UserLeft {
+  string user_id = 1;
+}
+
+message RoomDeleted {
+  string reason = 1;
+}
+
+message SendMessageRequest {
+  string room_id = 1;
+  string content = 2;
+}
+
+message ChatMessage {
+  string id = 1;
+  string room_id = 2;
+  string user_id = 3;
+  string username = 4;
+  string content = 5;
+  string timestamp = 6;
+}
+
+message MessageAck {
+  string message_id = 1;
+  string timestamp = 2;
+}
