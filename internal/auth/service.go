@@ -9,13 +9,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UserRepo interface {
+	CreateUser(ctx context.Context, user *User) error
+	FindUserByUsername(ctx context.Context, username string) (*User, error)
+}
 type AuthService struct {
-	repo         *PostgresRepository
+	repo         UserRepo
 	jwtService   *JWTService
 	tokenService *TokenService
 }
 
-func NewAuthService(repo *PostgresRepository, jwt *JWTService, token *TokenService) *AuthService {
+func NewAuthService(repo UserRepo, jwt *JWTService, token *TokenService) *AuthService {
 	return &AuthService{repo: repo,
 		jwtService:   jwt,
 		tokenService: token,

@@ -10,15 +10,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PostgresRepository struct {
+type UserPostgresRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewPostgresRepository(db *pgxpool.Pool) *PostgresRepository {
-	return &PostgresRepository{db: db}
+func NewUserPostgresRepository(db *pgxpool.Pool) *UserPostgresRepository {
+	return &UserPostgresRepository{db: db}
 }
 
-func (r *PostgresRepository) CreateUser(ctx context.Context, user *User) error {
+func (r *UserPostgresRepository) CreateUser(ctx context.Context, user *User) error {
 	query := `
 		INSERT INTO users (id, username, email, password_hash)
 		VALUES ($1, $2, $3, $4)
@@ -42,7 +42,7 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *User) error {
 	return nil
 }
 
-func (r *PostgresRepository) FindUserByUsername(ctx context.Context, username string) (*User, error) {
+func (r *UserPostgresRepository) FindUserByUsername(ctx context.Context, username string) (*User, error) {
 	query := `
 		SELECT id, username, email, password_hash
 		FROM users

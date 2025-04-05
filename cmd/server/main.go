@@ -97,7 +97,7 @@ func main() {
 	}
 	defer pgPool.Close()
 
-	authRepo := auth.NewPostgresRepository(pgPool)
+	authRepo := auth.NewUserPostgresRepository(pgPool)
 	tokenRepo := auth.NewPostgresTokenRepository(pgPool)
 	tokenService := auth.NewTokenService(tokenRepo, jwtService, jwtConfig.AccessDuration, jwtConfig.RefreshDuration)
 
