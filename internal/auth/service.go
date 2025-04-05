@@ -10,11 +10,16 @@ import (
 )
 
 type AuthService struct {
-	repo *PostgresRepository
+	repo         *PostgresRepository
+	jwtService   *JWTService
+	tokenService *TokenService
 }
 
-func NewAuthService(repo *PostgresRepository) *AuthService {
-	return &AuthService{repo: repo}
+func NewAuthService(repo *PostgresRepository, jwt *JWTService, token *TokenService) *AuthService {
+	return &AuthService{repo: repo,
+		jwtService:   jwt,
+		tokenService: token,
+	}
 }
 
 func (s *AuthService) Register(username, password, email string) error {
@@ -30,7 +35,7 @@ func (s *AuthService) Register(username, password, email string) error {
 	}
 
 	user := &User{
-		ID:       uuid.New().String(),
+		ID:       uuid.New(),
 		Username: username,
 		Password: string(hashedPassword),
 		Email:    email,
@@ -39,16 +44,50 @@ func (s *AuthService) Register(username, password, email string) error {
 	return s.repo.CreateUser(context.Background(), user)
 }
 
-func (s *AuthService) Login(username, password string) (*User, error) {
+func (s *AuthService) Login(username, password string) (*User, string, string, error) {
 	user, err := s.repo.FindUserByUsername(context.Background(), username)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, "", "", errors.New("invalid credentials")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, "", "", errors.New("invalid credentials")
 	}
 
-	return user, nil
+	//accessToken, refreshToken, err := s.jwtService.GenerateTokens(user.ID, username)
+	//if err != nil {
+	//	log.Printf("Failed to generate tokens: %v", err)
+	//	return nil, "", "", errors.New("failed to generate tokens")
+	//}
+	accessToken, refreshToken, err := s.tokenService.GenerateAndStoreTokens(context.Background(), user.ID)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return user, accessToken, refreshToken, nil
+}
+
+func (s *AuthService) HandleRefresh(ctx context.Context, refreshToken string) (string, string, error) {
+	newAccessToken, newRefreshToken, err := s.tokenService.RefreshTokens(ctx, refreshToken)
+	if err != nil {
+		return "", "", err
+	}
+	return newAccessToken, newRefreshToken, nil
+}
+
+func (s *AuthService) RevokeRefreshToken(ctx context.Context, refreshToken string) error {
+	err := s.tokenService.RevokeRefreshToken(ctx, refreshToken)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *AuthService) RevokeAllTokens(ctx context.Context, userId uuid.UUID) error {
+	err := s.tokenService.RevokeAllTokens(ctx, userId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

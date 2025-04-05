@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 
 package chat;
 
@@ -7,7 +8,10 @@ option go_package = "github.com/assu-2000/StreamRPC/internal/pb";
 service ChatService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
   rpc ChatStream(stream ClientMessage) returns (stream ServerMessage);
+  rpc CheckAuth(google.protobuf.Empty) returns (AuthResponse);
 }
 
 message LoginRequest {
@@ -17,7 +21,8 @@ message LoginRequest {
 
 message LoginResponse {
   string token = 1;
-  string user_id = 2;
+  string refresh_token = 2;
+  string user_id = 3;
 }
 
 message ClientMessage {
@@ -38,5 +43,24 @@ message RegisterRequest {
 message RegisterResponse {
   bool success = 1;
   string message = 2;
+}
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message AuthResponse {
+  string message =1;
 }
 

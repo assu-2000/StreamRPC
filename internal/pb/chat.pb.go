@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -76,7 +77,8 @@ func (x *LoginRequest) GetPassword() string {
 type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -114,6 +116,13 @@ func (*LoginResponse) Descriptor() ([]byte, []int) {
 func (x *LoginResponse) GetToken() string {
 	if x != nil {
 		return x.Token
+	}
+	return ""
+}
+
+func (x *LoginResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
 	}
 	return ""
 }
@@ -333,17 +342,246 @@ func (x *RegisterResponse) GetMessage() string {
 	return ""
 }
 
+type RefreshTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshTokenRequest) Reset() {
+	*x = RefreshTokenRequest{}
+	mi := &file_internal_pb_chat_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshTokenRequest) ProtoMessage() {}
+
+func (x *RefreshTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_pb_chat_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshTokenRequest.ProtoReflect.Descriptor instead.
+func (*RefreshTokenRequest) Descriptor() ([]byte, []int) {
+	return file_internal_pb_chat_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RefreshTokenRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type RefreshTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshTokenResponse) Reset() {
+	*x = RefreshTokenResponse{}
+	mi := &file_internal_pb_chat_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshTokenResponse) ProtoMessage() {}
+
+func (x *RefreshTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_pb_chat_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshTokenResponse.ProtoReflect.Descriptor instead.
+func (*RefreshTokenResponse) Descriptor() ([]byte, []int) {
+	return file_internal_pb_chat_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *RefreshTokenResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *RefreshTokenResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type LogoutRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogoutRequest) Reset() {
+	*x = LogoutRequest{}
+	mi := &file_internal_pb_chat_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogoutRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogoutRequest) ProtoMessage() {}
+
+func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_pb_chat_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
+func (*LogoutRequest) Descriptor() ([]byte, []int) {
+	return file_internal_pb_chat_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *LogoutRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type LogoutResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogoutResponse) Reset() {
+	*x = LogoutResponse{}
+	mi := &file_internal_pb_chat_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogoutResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogoutResponse) ProtoMessage() {}
+
+func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_pb_chat_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
+func (*LogoutResponse) Descriptor() ([]byte, []int) {
+	return file_internal_pb_chat_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *LogoutResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type AuthResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthResponse) Reset() {
+	*x = AuthResponse{}
+	mi := &file_internal_pb_chat_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthResponse) ProtoMessage() {}
+
+func (x *AuthResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_pb_chat_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthResponse.ProtoReflect.Descriptor instead.
+func (*AuthResponse) Descriptor() ([]byte, []int) {
+	return file_internal_pb_chat_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *AuthResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_internal_pb_chat_proto protoreflect.FileDescriptor
 
 const file_internal_pb_chat_proto_rawDesc = "" +
 	"\n" +
-	"\x16internal/pb/chat.proto\x12\x04chat\"F\n" +
+	"\x16internal/pb/chat.proto\x12\x04chat\x1a\x1bgoogle/protobuf/empty.proto\"F\n" +
 	"\fLoginRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\">\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"c\n" +
 	"\rLoginResponse\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\")\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\")\n" +
 	"\rClientMessage\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\"A\n" +
 	"\rServerMessage\x12\x18\n" +
@@ -355,12 +593,26 @@ const file_internal_pb_chat_proto_rawDesc = "" +
 	"\x05email\x18\x03 \x01(\tR\x05email\"F\n" +
 	"\x10RegisterResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2\xb6\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\":\n" +
+	"\x13RefreshTokenRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"^\n" +
+	"\x14RefreshTokenResponse\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"4\n" +
+	"\rLogoutRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"*\n" +
+	"\x0eLogoutResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"(\n" +
+	"\fAuthResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\xeb\x02\n" +
 	"\vChatService\x129\n" +
 	"\bRegister\x12\x15.chat.RegisterRequest\x1a\x16.chat.RegisterResponse\x120\n" +
-	"\x05Login\x12\x12.chat.LoginRequest\x1a\x13.chat.LoginResponse\x12:\n" +
+	"\x05Login\x12\x12.chat.LoginRequest\x1a\x13.chat.LoginResponse\x12E\n" +
+	"\fRefreshToken\x12\x19.chat.RefreshTokenRequest\x1a\x1a.chat.RefreshTokenResponse\x123\n" +
+	"\x06Logout\x12\x13.chat.LogoutRequest\x1a\x14.chat.LogoutResponse\x12:\n" +
 	"\n" +
-	"ChatStream\x12\x13.chat.ClientMessage\x1a\x13.chat.ServerMessage(\x010\x01B,Z*github.com/assu-2000/StreamRPC/internal/pbb\x06proto3"
+	"ChatStream\x12\x13.chat.ClientMessage\x1a\x13.chat.ServerMessage(\x010\x01\x127\n" +
+	"\tCheckAuth\x12\x16.google.protobuf.Empty\x1a\x12.chat.AuthResponseB,Z*github.com/assu-2000/StreamRPC/internal/pbb\x06proto3"
 
 var (
 	file_internal_pb_chat_proto_rawDescOnce sync.Once
@@ -374,27 +626,39 @@ func file_internal_pb_chat_proto_rawDescGZIP() []byte {
 	return file_internal_pb_chat_proto_rawDescData
 }
 
-var file_internal_pb_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_internal_pb_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_internal_pb_chat_proto_goTypes = []any{
-	(*LoginRequest)(nil),     // 0: chat.LoginRequest
-	(*LoginResponse)(nil),    // 1: chat.LoginResponse
-	(*ClientMessage)(nil),    // 2: chat.ClientMessage
-	(*ServerMessage)(nil),    // 3: chat.ServerMessage
-	(*RegisterRequest)(nil),  // 4: chat.RegisterRequest
-	(*RegisterResponse)(nil), // 5: chat.RegisterResponse
+	(*LoginRequest)(nil),         // 0: chat.LoginRequest
+	(*LoginResponse)(nil),        // 1: chat.LoginResponse
+	(*ClientMessage)(nil),        // 2: chat.ClientMessage
+	(*ServerMessage)(nil),        // 3: chat.ServerMessage
+	(*RegisterRequest)(nil),      // 4: chat.RegisterRequest
+	(*RegisterResponse)(nil),     // 5: chat.RegisterResponse
+	(*RefreshTokenRequest)(nil),  // 6: chat.RefreshTokenRequest
+	(*RefreshTokenResponse)(nil), // 7: chat.RefreshTokenResponse
+	(*LogoutRequest)(nil),        // 8: chat.LogoutRequest
+	(*LogoutResponse)(nil),       // 9: chat.LogoutResponse
+	(*AuthResponse)(nil),         // 10: chat.AuthResponse
+	(*emptypb.Empty)(nil),        // 11: google.protobuf.Empty
 }
 var file_internal_pb_chat_proto_depIdxs = []int32{
-	4, // 0: chat.ChatService.Register:input_type -> chat.RegisterRequest
-	0, // 1: chat.ChatService.Login:input_type -> chat.LoginRequest
-	2, // 2: chat.ChatService.ChatStream:input_type -> chat.ClientMessage
-	5, // 3: chat.ChatService.Register:output_type -> chat.RegisterResponse
-	1, // 4: chat.ChatService.Login:output_type -> chat.LoginResponse
-	3, // 5: chat.ChatService.ChatStream:output_type -> chat.ServerMessage
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4,  // 0: chat.ChatService.Register:input_type -> chat.RegisterRequest
+	0,  // 1: chat.ChatService.Login:input_type -> chat.LoginRequest
+	6,  // 2: chat.ChatService.RefreshToken:input_type -> chat.RefreshTokenRequest
+	8,  // 3: chat.ChatService.Logout:input_type -> chat.LogoutRequest
+	2,  // 4: chat.ChatService.ChatStream:input_type -> chat.ClientMessage
+	11, // 5: chat.ChatService.CheckAuth:input_type -> google.protobuf.Empty
+	5,  // 6: chat.ChatService.Register:output_type -> chat.RegisterResponse
+	1,  // 7: chat.ChatService.Login:output_type -> chat.LoginResponse
+	7,  // 8: chat.ChatService.RefreshToken:output_type -> chat.RefreshTokenResponse
+	9,  // 9: chat.ChatService.Logout:output_type -> chat.LogoutResponse
+	3,  // 10: chat.ChatService.ChatStream:output_type -> chat.ServerMessage
+	10, // 11: chat.ChatService.CheckAuth:output_type -> chat.AuthResponse
+	6,  // [6:12] is the sub-list for method output_type
+	0,  // [0:6] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_internal_pb_chat_proto_init() }
@@ -408,7 +672,7 @@ func file_internal_pb_chat_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_pb_chat_proto_rawDesc), len(file_internal_pb_chat_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

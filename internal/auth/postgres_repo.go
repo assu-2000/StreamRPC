@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -71,7 +72,7 @@ func isDuplicateKeyError(err error) bool {
 }
 
 type User struct {
-	ID       string
+	ID       uuid.UUID
 	Username string
 	Password string
 	Email    string

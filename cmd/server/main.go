@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/assu-2000/StreamRPC/config"
+	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
 	"net"
 	"os"
@@ -35,22 +40,56 @@ func (s *chatServer) Register(ctx context.Context, req *pb.RegisterRequest) (*pb
 }
 
 func (s *chatServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
-	user, err := s.authService.Login(req.Username, req.Password)
+	user, accessToken, refreshToken, err := s.authService.Login(req.Username, req.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: Générer un vrai JWT
-	token := "generated-jwt-token-for-" + user.ID
-
 	return &pb.LoginResponse{
-		Token:  token,
-		UserId: user.ID,
+		Token:        accessToken,
+		RefreshToken: refreshToken,
+		UserId:       user.ID.String(),
 	}, nil
+}
+
+func (s *chatServer) CheckAuth(ctx context.Context, _ *emptypb.Empty) (*pb.AuthResponse, error) {
+	userID := ctx.Value("user_id")
+	return &pb.AuthResponse{
+		Message: fmt.Sprintf("Hello, %s! You're authenticated.", userID),
+	}, nil
+}
+
+func (s *chatServer) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequest) (*pb.RefreshTokenResponse, error) {
+	accessToken, refreshToken, err := s.authService.HandleRefresh(ctx, req.RefreshToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to refresh tokens: %v", err)
+	}
+
+	return &pb.RefreshTokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *chatServer) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
+	userID, ok := ctx.Value("user_id").(uuid.UUID)
+	fmt.Println("User Id: ", userID)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
+	}
+
+	if err := s.authService.RevokeAllTokens(ctx, userID); err != nil {
+		log.Printf("Failed to revoke tokens: %v", err)
+		return nil, status.Error(codes.Internal, "failed to logout")
+	}
+
+	return &pb.LogoutResponse{Success: true}, nil
 }
 
 func main() {
 	pgConfig := config.LoadPostgresConfig()
+	jwtConfig := config.LoadJWTConfig()
+	jwtService := auth.NewJWTService(jwtConfig)
 
 	pgPool, err := database.NewPostgresConnection((*database.PostgresConfig)(pgConfig))
 	if err != nil {
@@ -59,14 +98,19 @@ func main() {
 	defer pgPool.Close()
 
 	authRepo := auth.NewPostgresRepository(pgPool)
-	authService := auth.NewAuthService(authRepo)
+	tokenRepo := auth.NewPostgresTokenRepository(pgPool)
+	tokenService := auth.NewTokenService(tokenRepo, jwtService, jwtConfig.AccessDuration, jwtConfig.RefreshDuration)
+
+	authService := auth.NewAuthService(authRepo, jwtService, tokenService)
 
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(authService.UnaryInterceptor()),
+	)
 	pb.RegisterChatServiceServer(s, &chatServer{
 		authService: authService,
 	})
