@@ -24,8 +24,8 @@ func (s *AuthService) UnaryInterceptor() grpc.UnaryServerInterceptor {
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
 		// Skip auth for login and register
-		if info.FullMethod == "/chat.ChatService/Login" ||
-			info.FullMethod == "/chat.ChatService/Register" {
+		if info.FullMethod == "/chat.AuthGrpcService/Login" ||
+			info.FullMethod == "/chat.AuthGrpcService/Register" {
 			return handler(ctx, req)
 		}
 
@@ -50,6 +50,40 @@ func (s *AuthService) UnaryInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
+func (s *AuthService) StreamInterceptor() grpc.StreamServerInterceptor {
+	return func(
+		srv interface{},
+		ss grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler,
+	) error {
+		md, ok := metadata.FromIncomingContext(ss.Context())
+		if !ok {
+			return status.Error(codes.Unauthenticated, "metadata is not provided")
+		}
+
+		token, err := extractToken(md)
+		if err != nil {
+			return err
+		}
+
+		claims, err := s.jwtService.ValidateToken(token)
+		if err != nil {
+			return status.Error(codes.Unauthenticated, "invalid token")
+		}
+
+		// Inject user_id in stream context
+		newCtx := context.WithValue(ss.Context(), "user_id", claims.UserID)
+
+		// Wrap stream to override its context with the new one
+		wrapped := &wrappedStream{ServerStream: ss, ctx: newCtx}
+
+		fmt.Println("Stream Interceptor user id:", claims.UserID)
+
+		return handler(srv, wrapped)
+	}
+}
+
 func extractToken(md metadata.MD) (string, error) {
 	authHeaders := md.Get(authorizationHeader)
 	if len(authHeaders) == 0 {
@@ -62,4 +96,13 @@ func extractToken(md metadata.MD) (string, error) {
 	}
 
 	return token[len(bearerPrefix):], nil
+}
+
+type wrappedStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (w *wrappedStream) Context() context.Context {
+	return w.ctx
 }

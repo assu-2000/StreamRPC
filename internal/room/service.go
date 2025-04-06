@@ -3,6 +3,8 @@ package room
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/redis/go-redis/v9"
 	"log"
 	"sync"
 	"time"
@@ -75,7 +77,13 @@ func (s *RoomService) JoinRoom(ctx context.Context, roomID, userID string) (<-ch
 	// Goroutine pour gérer les messages
 	go func() {
 		defer close(events)
-		defer pubsub.Close()
+		defer func(pubsub *redis.PubSub) {
+			err := pubsub.Close()
+			if err != nil {
+				fmt.Println("pubsub close error:", err)
+				return
+			}
+		}(pubsub)
 
 		for {
 			select {
@@ -136,5 +144,9 @@ func (s *RoomService) LeaveRoom(ctx context.Context, roomID, userID string) erro
 }
 
 func (s *RoomService) broadcastRoomEvent(roomID string, event RoomEvent) {
-	s.repo.PublishRoomEvent(context.Background(), roomID, event)
+	err := s.repo.PublishRoomEvent(context.Background(), roomID, event)
+	if err != nil {
+		fmt.Println("publish room event error:", err)
+		return
+	}
 }

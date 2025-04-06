@@ -20,7 +20,7 @@ func LoadJWTConfig() JWTConfig {
 	}
 	return JWTConfig{
 		SecretKey:       os.Getenv("JWT_SECRET_KEY"),
-		AccessDuration:  15 * time.Minute,
+		AccessDuration:  50 * time.Minute,
 		RefreshDuration: 7 * 24 * time.Hour,
 	}
 }

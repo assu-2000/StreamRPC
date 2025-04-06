@@ -37,7 +37,6 @@ func (s *JWTService) GenerateTokens(userID uuid.UUID) (accessToken, refreshToken
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.accessDuration)),
 		},
 	}
-
 	accessToken, err = jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(s.secretKey))
 	if err != nil {
 		return "", "", err

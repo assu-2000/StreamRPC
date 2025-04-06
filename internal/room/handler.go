@@ -2,6 +2,8 @@ package room
 
 import (
 	"context"
+	"fmt"
+	"github.com/google/uuid"
 	"log"
 
 	"github.com/assu-2000/StreamRPC/internal/pb"
@@ -19,12 +21,12 @@ func NewGRPCHandler(service *RoomService) *RoomHandler {
 }
 
 func (h *RoomHandler) CreateRoom(ctx context.Context, req *pb.CreateRoomRequest) (*pb.Room, error) {
-	userID, ok := ctx.Value("user_id").(string)
+	userID, ok := ctx.Value("user_id").(uuid.UUID)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "invalid user")
 	}
 
-	room, err := h.service.CreateRoom(ctx, req.Name, userID, req.IsPrivate)
+	room, err := h.service.CreateRoom(ctx, req.Name, userID.String(), req.IsPrivate)
 	if err != nil {
 		log.Printf("Failed to create room: %v", err)
 		return nil, status.Error(codes.Internal, "failed to create room")
@@ -38,12 +40,13 @@ func (h *RoomHandler) CreateRoom(ctx context.Context, req *pb.CreateRoomRequest)
 }
 
 func (h *RoomHandler) JoinRoom(req *pb.JoinRoomRequest, stream pb.RoomGrpcService_JoinRoomServer) error {
-	userID, ok := stream.Context().Value("user_id").(string)
+	userID, ok := stream.Context().Value("user_id").(uuid.UUID)
+	fmt.Println("userid ", userID)
 	if !ok {
 		return status.Error(codes.Unauthenticated, "invalid user")
 	}
 
-	events, err := h.service.JoinRoom(stream.Context(), req.RoomId, userID)
+	events, err := h.service.JoinRoom(stream.Context(), req.RoomId, userID.String())
 	if err != nil {
 		return status.Error(codes.Internal, "failed to join room")
 	}
@@ -70,10 +73,16 @@ func (h *RoomHandler) JoinRoom(req *pb.JoinRoomRequest, stream pb.RoomGrpcServic
 		case EventMessage:
 			// Handled by MessageService
 			continue
+		default:
+			fmt.Println("unhandled case")
 		}
 
 		if err := stream.Send(resp); err != nil {
-			h.service.LeaveRoom(stream.Context(), req.RoomId, userID)
+			err := h.service.LeaveRoom(stream.Context(), req.RoomId, userID.String())
+			if err != nil {
+				fmt.Printf("Failed to send response to user: %v", err)
+				return err
+			}
 			return err
 		}
 	}

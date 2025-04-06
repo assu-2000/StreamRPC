@@ -49,6 +49,7 @@ func main() {
 
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(authService.UnaryInterceptor()),
+		grpc.StreamInterceptor(authService.StreamInterceptor()),
 	)
 	pb.RegisterAuthGrpcServiceServer(s, &server.AuthHandler{
 		AuthService: authService,

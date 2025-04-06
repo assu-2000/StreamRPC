@@ -2,6 +2,7 @@ package room
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -96,5 +97,9 @@ func (r *RedisRepository) SubscribeToRoom(ctx context.Context, roomID string) *r
 
 func (r *RedisRepository) PublishRoomEvent(ctx context.Context, roomID string, event interface{}) error {
 	channel := fmt.Sprintf("room:%s", roomID)
-	return r.client.Publish(ctx, channel, event).Err()
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("failed to marshal event: %w", err)
+	}
+	return r.client.Publish(ctx, channel, payload).Err()
 }
