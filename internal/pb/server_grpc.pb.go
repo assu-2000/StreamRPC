@@ -274,10 +274,14 @@ var AuthGrpcService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	RoomGrpcService_CreateRoom_FullMethodName = "/chat.RoomGrpcService/CreateRoom"
-	RoomGrpcService_ListRooms_FullMethodName  = "/chat.RoomGrpcService/ListRooms"
-	RoomGrpcService_JoinRoom_FullMethodName   = "/chat.RoomGrpcService/JoinRoom"
-	RoomGrpcService_LeaveRoom_FullMethodName  = "/chat.RoomGrpcService/LeaveRoom"
+	RoomGrpcService_CreateRoom_FullMethodName     = "/chat.RoomGrpcService/CreateRoom"
+	RoomGrpcService_ListRooms_FullMethodName      = "/chat.RoomGrpcService/ListRooms"
+	RoomGrpcService_JoinRoom_FullMethodName       = "/chat.RoomGrpcService/JoinRoom"
+	RoomGrpcService_LeaveRoom_FullMethodName      = "/chat.RoomGrpcService/LeaveRoom"
+	RoomGrpcService_GetRoomStats_FullMethodName   = "/chat.RoomGrpcService/GetRoomStats"
+	RoomGrpcService_GetRoom_FullMethodName        = "/chat.RoomGrpcService/GetRoom"
+	RoomGrpcService_DeleteRoom_FullMethodName     = "/chat.RoomGrpcService/DeleteRoom"
+	RoomGrpcService_GetRoomMembers_FullMethodName = "/chat.RoomGrpcService/GetRoomMembers"
 )
 
 // RoomGrpcServiceClient is the client API for RoomGrpcService service.
@@ -285,9 +289,13 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RoomGrpcServiceClient interface {
 	CreateRoom(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*Room, error)
-	ListRooms(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RoomList, error)
+	ListRooms(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListRoomsResponse, error)
 	JoinRoom(ctx context.Context, in *JoinRoomRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[RoomEvent], error)
-	LeaveRoom(ctx context.Context, in *RoomID, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	LeaveRoom(ctx context.Context, in *LeaveRoomRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetRoomStats(ctx context.Context, in *RoomID, opts ...grpc.CallOption) (*RoomStatsResponse, error)
+	GetRoom(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*Room, error)
+	DeleteRoom(ctx context.Context, in *DeleteRoomRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetRoomMembers(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*RoomMembers, error)
 }
 
 type roomGrpcServiceClient struct {
@@ -308,9 +316,9 @@ func (c *roomGrpcServiceClient) CreateRoom(ctx context.Context, in *CreateRoomRe
 	return out, nil
 }
 
-func (c *roomGrpcServiceClient) ListRooms(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RoomList, error) {
+func (c *roomGrpcServiceClient) ListRooms(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListRoomsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RoomList)
+	out := new(ListRoomsResponse)
 	err := c.cc.Invoke(ctx, RoomGrpcService_ListRooms_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -337,10 +345,50 @@ func (c *roomGrpcServiceClient) JoinRoom(ctx context.Context, in *JoinRoomReques
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type RoomGrpcService_JoinRoomClient = grpc.ServerStreamingClient[RoomEvent]
 
-func (c *roomGrpcServiceClient) LeaveRoom(ctx context.Context, in *RoomID, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *roomGrpcServiceClient) LeaveRoom(ctx context.Context, in *LeaveRoomRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, RoomGrpcService_LeaveRoom_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomGrpcServiceClient) GetRoomStats(ctx context.Context, in *RoomID, opts ...grpc.CallOption) (*RoomStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RoomStatsResponse)
+	err := c.cc.Invoke(ctx, RoomGrpcService_GetRoomStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomGrpcServiceClient) GetRoom(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*Room, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Room)
+	err := c.cc.Invoke(ctx, RoomGrpcService_GetRoom_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomGrpcServiceClient) DeleteRoom(ctx context.Context, in *DeleteRoomRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, RoomGrpcService_DeleteRoom_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *roomGrpcServiceClient) GetRoomMembers(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*RoomMembers, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RoomMembers)
+	err := c.cc.Invoke(ctx, RoomGrpcService_GetRoomMembers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -352,9 +400,13 @@ func (c *roomGrpcServiceClient) LeaveRoom(ctx context.Context, in *RoomID, opts 
 // for forward compatibility.
 type RoomGrpcServiceServer interface {
 	CreateRoom(context.Context, *CreateRoomRequest) (*Room, error)
-	ListRooms(context.Context, *emptypb.Empty) (*RoomList, error)
+	ListRooms(context.Context, *emptypb.Empty) (*ListRoomsResponse, error)
 	JoinRoom(*JoinRoomRequest, grpc.ServerStreamingServer[RoomEvent]) error
-	LeaveRoom(context.Context, *RoomID) (*emptypb.Empty, error)
+	LeaveRoom(context.Context, *LeaveRoomRequest) (*emptypb.Empty, error)
+	GetRoomStats(context.Context, *RoomID) (*RoomStatsResponse, error)
+	GetRoom(context.Context, *GetRoomRequest) (*Room, error)
+	DeleteRoom(context.Context, *DeleteRoomRequest) (*emptypb.Empty, error)
+	GetRoomMembers(context.Context, *GetRoomRequest) (*RoomMembers, error)
 	mustEmbedUnimplementedRoomGrpcServiceServer()
 }
 
@@ -368,14 +420,26 @@ type UnimplementedRoomGrpcServiceServer struct{}
 func (UnimplementedRoomGrpcServiceServer) CreateRoom(context.Context, *CreateRoomRequest) (*Room, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRoom not implemented")
 }
-func (UnimplementedRoomGrpcServiceServer) ListRooms(context.Context, *emptypb.Empty) (*RoomList, error) {
+func (UnimplementedRoomGrpcServiceServer) ListRooms(context.Context, *emptypb.Empty) (*ListRoomsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRooms not implemented")
 }
 func (UnimplementedRoomGrpcServiceServer) JoinRoom(*JoinRoomRequest, grpc.ServerStreamingServer[RoomEvent]) error {
 	return status.Errorf(codes.Unimplemented, "method JoinRoom not implemented")
 }
-func (UnimplementedRoomGrpcServiceServer) LeaveRoom(context.Context, *RoomID) (*emptypb.Empty, error) {
+func (UnimplementedRoomGrpcServiceServer) LeaveRoom(context.Context, *LeaveRoomRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LeaveRoom not implemented")
+}
+func (UnimplementedRoomGrpcServiceServer) GetRoomStats(context.Context, *RoomID) (*RoomStatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoomStats not implemented")
+}
+func (UnimplementedRoomGrpcServiceServer) GetRoom(context.Context, *GetRoomRequest) (*Room, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoom not implemented")
+}
+func (UnimplementedRoomGrpcServiceServer) DeleteRoom(context.Context, *DeleteRoomRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteRoom not implemented")
+}
+func (UnimplementedRoomGrpcServiceServer) GetRoomMembers(context.Context, *GetRoomRequest) (*RoomMembers, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoomMembers not implemented")
 }
 func (UnimplementedRoomGrpcServiceServer) mustEmbedUnimplementedRoomGrpcServiceServer() {}
 func (UnimplementedRoomGrpcServiceServer) testEmbeddedByValue()                         {}
@@ -446,7 +510,7 @@ func _RoomGrpcService_JoinRoom_Handler(srv interface{}, stream grpc.ServerStream
 type RoomGrpcService_JoinRoomServer = grpc.ServerStreamingServer[RoomEvent]
 
 func _RoomGrpcService_LeaveRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RoomID)
+	in := new(LeaveRoomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -458,7 +522,79 @@ func _RoomGrpcService_LeaveRoom_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: RoomGrpcService_LeaveRoom_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoomGrpcServiceServer).LeaveRoom(ctx, req.(*RoomID))
+		return srv.(RoomGrpcServiceServer).LeaveRoom(ctx, req.(*LeaveRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomGrpcService_GetRoomStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RoomID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomGrpcServiceServer).GetRoomStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomGrpcService_GetRoomStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomGrpcServiceServer).GetRoomStats(ctx, req.(*RoomID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomGrpcService_GetRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomGrpcServiceServer).GetRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomGrpcService_GetRoom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomGrpcServiceServer).GetRoom(ctx, req.(*GetRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomGrpcService_DeleteRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomGrpcServiceServer).DeleteRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomGrpcService_DeleteRoom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomGrpcServiceServer).DeleteRoom(ctx, req.(*DeleteRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoomGrpcService_GetRoomMembers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomGrpcServiceServer).GetRoomMembers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomGrpcService_GetRoomMembers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomGrpcServiceServer).GetRoomMembers(ctx, req.(*GetRoomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -481,6 +617,22 @@ var RoomGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LeaveRoom",
 			Handler:    _RoomGrpcService_LeaveRoom_Handler,
+		},
+		{
+			MethodName: "GetRoomStats",
+			Handler:    _RoomGrpcService_GetRoomStats_Handler,
+		},
+		{
+			MethodName: "GetRoom",
+			Handler:    _RoomGrpcService_GetRoom_Handler,
+		},
+		{
+			MethodName: "DeleteRoom",
+			Handler:    _RoomGrpcService_DeleteRoom_Handler,
+		},
+		{
+			MethodName: "GetRoomMembers",
+			Handler:    _RoomGrpcService_GetRoomMembers_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

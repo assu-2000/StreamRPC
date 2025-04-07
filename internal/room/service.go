@@ -2,6 +2,7 @@ package room
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
@@ -13,7 +14,7 @@ import (
 )
 
 type RoomService struct {
-	repo          Repository
+	repo          RoomRepository
 	activeRooms   map[string]*RoomContext
 	activeRoomsMu sync.RWMutex
 }
@@ -23,7 +24,7 @@ type RoomContext struct {
 	CancelFunc context.CancelFunc
 }
 
-func NewRoomService(repo Repository) *RoomService {
+func NewRoomService(repo RoomRepository) *RoomService {
 	return &RoomService{
 		repo:        repo,
 		activeRooms: make(map[string]*RoomContext),
@@ -47,21 +48,21 @@ func (s *RoomService) CreateRoom(ctx context.Context, name string, creatorID str
 }
 
 func (s *RoomService) JoinRoom(ctx context.Context, roomID, userID string) (<-chan RoomEvent, error) {
-	// Vérifie si le room existe
+	// checks if room does exist
 	exists, err := s.repo.RoomExists(ctx, roomID)
 	if err != nil || !exists {
 		return nil, errors.New("room does not exist")
 	}
 
-	// Ajoute l'utilisateur au room
+	// Adds the user into the room
 	if err := s.repo.AddRoomMember(ctx, roomID, userID); err != nil {
 		return nil, err
 	}
 
-	// Crée le channel d'événements
+	// creates channel for events
 	events := make(chan RoomEvent, 10)
 
-	// Gère la connexion Redis PubSub
+	// handles Redis PubSub connection
 	roomCtx, cancel := context.WithCancel(ctx)
 	pubsub := s.repo.SubscribeToRoom(roomCtx, roomID)
 
@@ -74,40 +75,9 @@ func (s *RoomService) JoinRoom(ctx context.Context, roomID, userID string) (<-ch
 	s.activeRooms[roomID].Members[userID] = struct{}{}
 	s.activeRoomsMu.Unlock()
 
-	// Goroutine pour gérer les messages
-	go func() {
-		defer close(events)
-		defer func(pubsub *redis.PubSub) {
-			err := pubsub.Close()
-			if err != nil {
-				fmt.Println("pubsub close error:", err)
-				return
-			}
-		}(pubsub)
-
-		for {
-			select {
-			case <-roomCtx.Done():
-				return
-			default:
-				msg, err := pubsub.ReceiveMessage(roomCtx)
-				if err != nil {
-					log.Printf("Error receiving message: %v", err)
-					continue
-				}
-
-				events <- RoomEvent{
-					Type:   EventUserJoined,
-					RoomID: roomID,
-					Payload: ChatMessage{
-						Content: msg.Payload,
-					},
-				}
-			}
-		}
-	}()
-
-	// Notifie les autres utilisateurs
+	// Goroutine to handle messages
+	go s.handlePubSubMessages(roomID, pubsub, events)
+	// notifies other users
 	s.broadcastRoomEvent(roomID, RoomEvent{
 		Type:   EventUserJoined,
 		UserID: userID,
@@ -133,7 +103,7 @@ func (s *RoomService) LeaveRoom(ctx context.Context, roomID, userID string) erro
 		}
 	}
 
-	// Notifie les autres utilisateurs
+	// notifies other users
 	s.broadcastRoomEvent(roomID, RoomEvent{
 		Type:   EventUserLeft,
 		UserID: userID,
@@ -148,5 +118,97 @@ func (s *RoomService) broadcastRoomEvent(roomID string, event RoomEvent) {
 	if err != nil {
 		fmt.Println("publish room event error:", err)
 		return
+	}
+}
+
+// GetRoom retrieves details on a specific room
+func (s *RoomService) GetRoom(ctx context.Context, roomID string) (*Room, error) {
+	return s.repo.GetRoom(ctx, roomID)
+}
+
+// ListRooms returns all available rooms
+func (s *RoomService) ListRooms(ctx context.Context) ([]*Room, error) {
+	roomIDs, err := s.repo.ListRoomIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var rooms []*Room
+	for _, id := range roomIDs {
+		room, err := s.repo.GetRoom(ctx, id)
+		if err != nil {
+			continue // ou retourner l'erreur selon le cas
+		}
+		rooms = append(rooms, room)
+	}
+
+	return rooms, nil
+}
+
+// DeleteRoom deletes room and its members
+func (s *RoomService) DeleteRoom(ctx context.Context, roomID string) error {
+	// 1. notifies other users
+	s.broadcastRoomEvent(roomID, RoomEvent{
+		Type:   EventRoomDeleted,
+		RoomID: roomID,
+	})
+
+	// 2. delets room
+	return s.repo.DeleteRoom(ctx, roomID)
+}
+
+// GetRoomMembers returns members of a given room
+func (s *RoomService) GetRoomMembers(ctx context.Context, roomID string) ([]string, error) {
+	return s.repo.GetRoomMembers(ctx, roomID)
+}
+
+// RoomStats returns a room's stats
+func (s *RoomService) RoomStats(ctx context.Context, roomID string) (*RoomStats, error) {
+	members, err := s.repo.GetRoomMembers(ctx, roomID)
+	if err != nil {
+		return nil, err
+	}
+
+	room, err := s.repo.GetRoom(ctx, roomID)
+	if err != nil {
+		return nil, err
+	}
+
+	s.activeRoomsMu.RLock()
+	activeCount := len(s.activeRooms[roomID].Members)
+	s.activeRoomsMu.RUnlock()
+
+	return &RoomStats{
+		Room:          room,
+		TotalMembers:  len(members),
+		ActiveMembers: activeCount,
+	}, nil
+}
+
+func (s *RoomService) handlePubSubMessages(roomID string, pubsub *redis.PubSub, events chan<- RoomEvent) {
+	defer close(events)
+	defer pubsub.Close()
+
+	for {
+		msg, err := pubsub.ReceiveMessage(context.Background())
+		if err != nil {
+			if errors.Is(err, redis.ErrClosed) {
+				return
+			}
+			log.Printf("PubSub error: %v", err)
+			continue
+		}
+
+		var event RoomEvent
+		if err := json.Unmarshal([]byte(msg.Payload), &event); err != nil {
+			log.Printf("Failed to unmarshal event: %v", err)
+			continue
+		}
+
+		select {
+		case events <- event:
+		default:
+			log.Println("Event channel full, dropping event")
+		}
 	}
 }

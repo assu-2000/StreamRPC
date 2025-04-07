@@ -1,5 +1,6 @@
 syntax = "proto3";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 package chat;
 
@@ -15,9 +16,13 @@ service AuthGrpcService {
 
 service RoomGrpcService {
   rpc CreateRoom(CreateRoomRequest) returns (Room);
-  rpc ListRooms(google.protobuf.Empty) returns (RoomList);
+  rpc ListRooms(google.protobuf.Empty) returns (ListRoomsResponse);
   rpc JoinRoom(JoinRoomRequest) returns (stream RoomEvent);
-  rpc LeaveRoom(RoomID) returns (google.protobuf.Empty);
+  rpc LeaveRoom(LeaveRoomRequest ) returns (google.protobuf.Empty);
+  rpc GetRoomStats (RoomID) returns (RoomStatsResponse);
+  rpc GetRoom(GetRoomRequest) returns (Room);
+  rpc DeleteRoom(DeleteRoomRequest) returns (google.protobuf.Empty);
+  rpc GetRoomMembers(GetRoomRequest) returns (RoomMembers);
 }
 
 service MessageGrpcService {
@@ -34,15 +39,6 @@ message LoginResponse {
   string token = 1;
   string refresh_token = 2;
   string user_id = 3;
-}
-
-message ClientMessage {
-  string content = 1;
-}
-
-message ServerMessage {
-  string content = 1;
-  string sender = 2;
 }
 
 message RegisterRequest {
@@ -75,6 +71,17 @@ message AuthResponse {
   string message =1;
 }
 
+message ClientMessage {
+  string content = 1;
+}
+
+message ServerMessage {
+  string content = 1;
+  string sender = 2;
+}
+
+
+
 message CreateRoomRequest {
   string name = 1;
   bool is_private = 2;
@@ -84,15 +91,33 @@ message JoinRoomRequest {
   string room_id = 1;
 }
 
+message LeaveRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+}
+message GetRoomRequest {
+  string room_id = 1;
+}
+
+message DeleteRoomRequest {
+  string room_id = 1;
+}
+
 message Room {
   string id = 1;
   string name = 2;
   uint32 member_count = 3;
   bool is_private = 4;
+  string created_by = 5;
+  google.protobuf.Timestamp created_at = 6;
 }
 
-message RoomList {
+message ListRoomsResponse {
   repeated Room rooms = 1;
+}
+
+message RoomMembers {
+  repeated string user_ids = 1;
 }
 
 message RoomID {
@@ -118,6 +143,13 @@ message UserLeft {
 
 message RoomDeleted {
   string reason = 1;
+}
+
+message RoomStatsResponse {
+  Room room = 1;
+  int32 total_members = 2;
+  int32 active_members = 3;
+  google.protobuf.Timestamp last_activity = 4;
 }
 
 message SendMessageRequest {

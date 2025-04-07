@@ -26,6 +26,7 @@ const (
 	EventUserLeft
 	EventRoomDeleted
 	EventMessage
+	EventRoomUpdated
 )
 
 type ChatMessage struct {
@@ -34,4 +35,10 @@ type ChatMessage struct {
 	UserID    string
 	Content   string
 	Timestamp time.Time
+}
+
+type RoomStats struct {
+	Room          *Room
+	TotalMembers  int
+	ActiveMembers int
 }
